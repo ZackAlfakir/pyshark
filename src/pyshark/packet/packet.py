@@ -2,6 +2,10 @@ from __future__ import print_function
 
 import datetime
 import os
+try:
+    import codecs
+except:
+    pass
 
 from pyshark.packet import consts
 from pyshark.packet.common import Pickleable
@@ -134,3 +138,28 @@ class Packet(Pickleable):
         retrieved by easier means.
         """
         return [layer for layer in self.layers if layer.layer_name.lower() == layer_name.lower()]   
+
+    def __bytes__(self):
+        """Returns the raw data of the packet."""
+        # This will only work if they had include_raw in their capture
+        try:
+            raw_data = self.frame_raw.value
+        except:
+            raise KeyError("You must have include_raw in your capture in order to get bytes.")
+        try:
+            # Python3
+            return codecs.decode(raw_data, 'hex')
+        except:
+            try:
+                # Python2
+                return str(raw_data, 'hex')
+            except:
+                # If none of those work
+                raise
+
+    def get_raw(self):
+        """Returns the raw data of the packet."""
+        try:
+            return bytes(self)
+        except:
+            raise
